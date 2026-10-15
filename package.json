@@ -1,0 +1,36 @@
+{
+  "name": "hustlehub-plus-api",
+  "version": "2.0.0",
+  "description": "HustleHub+ Part 2 - Secure Freelance Marketplace API with MongoDB",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "generate-certs": "node generate-certs.js",
+    "test": "newman run HustleHub+.postman_collection.json -e HustleHub+_Environment.postman_environment.json",
+    "lint": "eslint src/ --ext .js"
+  },
+  "keywords": ["freelance", "marketplace", "api", "security", "mongodb", "mern"],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "express-mongo-sanitize": "^2.2.0",
+    "express-rate-limit": "^7.5.0",
+    "express-validator": "^7.3.2",
+    "helmet": "^8.3.0",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^8.14.3",
+    "morgan": "^1.10.0",
+    "winston": "^3.17.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14",
+    "newman": "^6.2.1",
+    "eslint": "^9.0.0"
+  }
+}

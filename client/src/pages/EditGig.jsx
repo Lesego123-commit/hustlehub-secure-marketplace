@@ -1,0 +1,219 @@
+// src/pages/EditGig.jsx — Edit Existing Gig Page (Freelancer)
+// Fetches an existing gig by URL parameter ID and pre-fills a form for editing.
+// Re-uses the same field layout and categories as CreateGig.
+//
+// React useEffect: https://react.dev/reference/react/useEffect
+// React useState: https://react.dev/reference/react/useState
+// React Router useParams: https://reactrouter.com/en/main/hooks/use-params
+// React Router useNavigate: https://reactrouter.com/en/main/hooks/use-navigate
+// Axios PUT requests: https://axios-http.com/docs/put
+
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import api from '../api/axios';
+
+const CATEGORIES = [
+  { value: 'web-development', label: 'Web Development' },
+  { value: 'mobile-development', label: 'Mobile Development' },
+  { value: 'design', label: 'Design' },
+  { value: 'writing', label: 'Writing' },
+  { value: 'marketing', label: 'Marketing' },
+  { value: 'data-science', label: 'Data Science' },
+  { value: 'other', label: 'Other' },
+];
+
+function EditGig() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    category: '',
+    price: '',
+    deliveryTime: '',
+  });
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    fetchGig();
+  }, [id]);
+
+  const fetchGig = async () => {
+    try {
+      const response = await api.get(`/api/gigs/${id}`);
+      const gig = response.data.data.gig;
+      setFormData({
+        title: gig.title || '',
+        description: gig.description || '',
+        category: gig.category || '',
+        price: gig.price?.toString() || '',
+        deliveryTime: (gig.deliveryTime?.replace(/\D/g, '') || gig.deliveryTime?.toString()) || '',
+      });
+    } catch (err) {
+      setError('Failed to load gig details.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setError('');
+  };
+
+  const validateForm = () => {
+    if (!formData.title.trim()) return 'Title is required.';
+    if (!formData.description.trim()) return 'Description is required.';
+    if (!formData.category) return 'Category is required.';
+    if (!formData.price || Number(formData.price) <= 0)
+      return 'Price must be a positive number.';
+    if (!formData.deliveryTime || Number(formData.deliveryTime) <= 0)
+      return 'Delivery time must be a positive number.';
+    return null;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+
+    const validationError = validateForm();
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
+    setSaving(true);
+    try {
+      await api.put(`/api/gigs/${id}`, {
+        title: formData.title.trim(),
+        description: formData.description.trim(),
+        category: formData.category,
+        price: Number(formData.price),
+        deliveryTime: `${formData.deliveryTime} days`,
+      });
+      navigate('/gigs/my');
+    } catch (err) {
+      const message =
+        err.response?.data?.message || 'Failed to update gig. Please try again.';
+      setError(message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="page-container">
+        <div className="loading">
+          <div className="loading-spinner"></div>
+          Loading gig details...
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="page-container">
+      <div className="page-header">
+        <h1>Edit Gig</h1>
+      </div>
+
+      <div className="card" style={{ maxWidth: '700px' }}>
+        {error && <div className="alert alert-error">{error}</div>}
+
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label htmlFor="title">Gig Title</label>
+            <input
+              id="title"
+              type="text"
+              name="title"
+              placeholder="e.g., I will build a responsive website"
+              value={formData.title}
+              onChange={handleChange}
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="description">Description</label>
+            <textarea
+              id="description"
+              name="description"
+              placeholder="Describe your service in detail..."
+              value={formData.description}
+              onChange={handleChange}
+              rows={5}
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="category">Category</label>
+            <select
+              id="category"
+              name="category"
+              value={formData.category}
+              onChange={handleChange}
+            >
+              <option value="">Select a category</option>
+              {CATEGORIES.map((cat) => (
+                <option key={cat.value} value={cat.value}>
+                  {cat.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="price">Price (R)</label>
+              <input
+                id="price"
+                type="number"
+                name="price"
+                placeholder="500"
+                min="1"
+                value={formData.price}
+                onChange={handleChange}
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="deliveryTime">Delivery Time (days)</label>
+              <input
+                id="deliveryTime"
+                type="number"
+                name="deliveryTime"
+                placeholder="7"
+                min="1"
+                value={formData.deliveryTime}
+                onChange={handleChange}
+              />
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={saving}
+            >
+              {saving ? 'Saving...' : 'Save Changes'}
+            </button>
+            <button
+              type="button"
+              className="btn btn-outline"
+              onClick={() => navigate('/gigs/my')}
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+export default EditGig;

@@ -1,0 +1,23 @@
+# .dockerignore — Backend Docker Build Exclusions
+# Prevents unnecessary files from being included in the Docker build context.
+#
+# Docker .dockerignore reference: https://docs.docker.com/build/concepts/context/#dockerignore-files
+
+node_modules
+npm-debug.log
+.env
+.env.example
+.git
+.gitignore
+.github
+client
+certs
+logs
+*.md
+.eslintrc.json
+.dockerignore
+docker-compose.yml
+HustleHub+.postman_collection.json
+HustleHub+_Environment.postman_environment.json
+newman-results.json
+eslint-*-results.json

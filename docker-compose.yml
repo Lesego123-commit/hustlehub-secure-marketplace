@@ -1,0 +1,68 @@
+# docker-compose.yml — HustleHub+ Container Orchestration
+# Defines the multi-container setup: MongoDB, backend API, and React frontend.
+#
+# Docker Compose file reference: https://docs.docker.com/compose/compose-file/
+# Docker networking: https://docs.docker.com/compose/how-tos/networking/
+# MongoDB Docker image: https://hub.docker.com/_/mongo
+# Health checks: https://docs.docker.com/reference/compose-file/services/#healthcheck
+
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:7
+    container_name: hustlehub-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: hustlehub
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - hustlehub-network
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hustlehub-backend
+    ports:
+      - "5000:5000"
+    environment:
+      PORT: 5000
+      NODE_ENV: production
+      MONGO_URI: mongodb://mongodb:27017/hustlehub
+      JWT_SECRET: hustlehub_docker_secret_key_change_in_production
+      JWT_EXPIRES_IN: 1h
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - hustlehub-network
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: hustlehub-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - hustlehub-network
+    restart: unless-stopped
+
+volumes:
+  mongo-data:
+    driver: local
+
+networks:
+  hustlehub-network:
+    driver: bridge

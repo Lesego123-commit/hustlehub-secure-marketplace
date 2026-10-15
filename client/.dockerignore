@@ -1,0 +1,13 @@
+# .dockerignore — Frontend Docker Build Exclusions
+# Prevents unnecessary files from being included in the Docker build context.
+#
+# Docker .dockerignore reference: https://docs.docker.com/build/concepts/context/#dockerignore-files
+
+node_modules
+npm-debug.log
+dist
+.git
+.gitignore
+*.md
+.eslintrc.json
+.dockerignore
